@@ -19,10 +19,13 @@ const estado = {
   categorias: [],
   proyectos: [],
   perfiles: [],
+  inversiones: [],
   mesRef: primerDiaDelMes(new Date()),
   monedaResumen: "ARS",
   editandoId: null,
   comprobanteViejo: null,
+  editandoInvId: null,
+  tabActual: "resumen",
 };
 
 // -------- Atajos --------
@@ -116,7 +119,7 @@ async function cargarTodo() {
   const [mov, cat, proy, perf] = await Promise.all([
     supabase.from("movimientos").select(`
       id, tipo, monto, moneda, fecha, descripcion, comprobante_path,
-      categoria_id, proyecto_id, created_by,
+      categoria_id, proyecto_id, inversion_id, created_by,
       categorias ( nombre, color ),
       proyectos ( nombre ),
       profiles ( nombre )
@@ -132,6 +135,16 @@ async function cargarTodo() {
   estado.categorias = cat.data || [];
   estado.proyectos = proy.data || [];
   estado.perfiles = perf.data || [];
+
+  // Inversiones: tolerante. Si todavía no se corrió la migración (la tabla
+  // no existe), la app sigue funcionando y el panel queda vacío.
+  try {
+    const inv = await supabase.from("inversiones")
+      .select(`*, profiles ( nombre )`).order("fecha", { ascending: false });
+    estado.inversiones = inv.error ? [] : (inv.data || []);
+  } catch {
+    estado.inversiones = [];
+  }
 }
 
 // ============================================================
@@ -142,6 +155,7 @@ function render() {
   renderResumen();
   renderFiltrosOpciones();
   renderMovimientos();
+  renderInversiones();
   renderConfig();
 }
 
@@ -268,14 +282,15 @@ function renderMovimientos() {
 
   cont.innerHTML = lista.map((m) => {
     const signo = m.tipo === "ingreso" ? "+" : "−";
+    const esInv = !!m.inversion_id;
     const meta = [
       m.categorias?.nombre,
       m.proyectos?.nombre,
       fechaCorta(m.fecha),
       m.profiles?.nombre
     ].filter(Boolean).join(" · ");
-    return `<button class="mov" data-id="${m.id}">
-      <span class="mov-ico ${m.tipo}">${m.tipo === "ingreso" ? "↓" : "↑"}</span>
+    return `<button class="mov${esInv ? " mov-inv" : ""}" data-id="${m.id}" data-inv="${esInv ? 1 : ""}">
+      <span class="mov-ico ${m.tipo}">${esInv ? "📈" : (m.tipo === "ingreso" ? "↓" : "↑")}</span>
       <span class="mov-info">
         <span class="mov-desc">${esc(m.descripcion)} ${m.comprobante_path ? '<span class="mov-clip">📎</span>' : ""}</span>
         <span class="mov-meta">${esc(meta)}</span>
@@ -285,7 +300,10 @@ function renderMovimientos() {
   }).join("");
 
   $$("#lista-movimientos .mov").forEach((b) =>
-    b.addEventListener("click", () => abrirModal(b.dataset.id)));
+    b.addEventListener("click", () => {
+      if (b.dataset.inv) { toast("Este movimiento se gestiona desde Inversiones."); return; }
+      abrirModal(b.dataset.id);
+    }));
 }
 
 // -------- Config: categorías y proyectos --------
@@ -306,6 +324,226 @@ function renderConfig() {
 
   $$("[data-del-cat]").forEach((b) => b.addEventListener("click", () => borrarCategoria(b.dataset.delCat)));
   $$("[data-del-proy]").forEach((b) => b.addEventListener("click", () => borrarProyecto(b.dataset.delProy)));
+}
+
+// ============================================================
+//  Inversiones (cripto, acciones, oro, otras)
+// ------------------------------------------------------------
+//  Al invertir, la plata SALE de la caja (se crea un egreso).
+//  Al retirar, VUELVE con su valor actual (se crea un ingreso).
+//  El valor actual se actualiza a mano; la ganancia/pérdida es
+//  "en papel" hasta que se retira.
+// ============================================================
+const TIPO_INV = { cripto: "Cripto", acciones: "Acciones", oro: "Oro", otras: "Otras" };
+const ICONO_INV = { cripto: "₿", acciones: "📊", oro: "🥇", otras: "💼" };
+
+function renderInversiones() {
+  const activas = estado.inversiones.filter((i) => i.estado === "activa");
+
+  // ----- Resumen por moneda (solo monedas con inversiones activas) -----
+  const cont = $("#inv-resumen");
+  const porMoneda = {};
+  for (const i of activas) {
+    const m = (porMoneda[i.moneda] = porMoneda[i.moneda] || { inv: 0, hoy: 0 });
+    m.inv += Number(i.monto_invertido);
+    m.hoy += Number(i.valor_actual);
+  }
+  const bloques = Object.entries(porMoneda).map(([mon, d]) => {
+    const res = d.hoy - d.inv;
+    const pct = d.inv ? (res / d.inv) * 100 : 0;
+    const cls = res >= 0 ? "ingreso" : "egreso";
+    const signo = res >= 0 ? "+" : "−";
+    return `<div class="inv-tarjeta">
+      <span class="inv-tarjeta-mon">Cartera en ${mon}</span>
+      <div class="inv-tarjeta-fila"><span>Invertido</span><strong>${fmt(d.inv, mon)}</strong></div>
+      <div class="inv-tarjeta-fila"><span>Vale hoy</span><strong>${fmt(d.hoy, mon)}</strong></div>
+      <div class="inv-tarjeta-fila resultado ${cls}">
+        <span>Resultado</span>
+        <strong>${signo}${fmt(Math.abs(res), mon)} · ${signo}${Math.abs(pct).toFixed(1)}%</strong>
+      </div>
+    </div>`;
+  }).join("");
+  cont.innerHTML = bloques || `<p class="vacio">Todavía no hay inversiones activas. Cargá la primera 👇</p>`;
+
+  // ----- Lista de inversiones -----
+  const lista = $("#lista-inversiones");
+  if (!estado.inversiones.length) { lista.innerHTML = ""; return; }
+
+  lista.innerHTML = estado.inversiones.map((i) => {
+    const res = Number(i.valor_actual) - Number(i.monto_invertido);
+    const pct = Number(i.monto_invertido) ? (res / Number(i.monto_invertido)) * 100 : 0;
+    const cls = res >= 0 ? "ingreso" : "egreso";
+    const signo = res >= 0 ? "+" : "−";
+    const cerrada = i.estado === "cerrada";
+    const meta = [TIPO_INV[i.tipo] || i.tipo, fechaCorta(i.fecha), i.profiles?.nombre].filter(Boolean).join(" · ");
+    return `<button class="inv-item${cerrada ? " cerrada" : ""}" data-inv-id="${i.id}">
+      <span class="inv-ico">${ICONO_INV[i.tipo] || "💼"}</span>
+      <span class="inv-info">
+        <span class="inv-nombre">${esc(i.nombre)} ${cerrada ? '<span class="inv-badge">retirada</span>' : ""}</span>
+        <span class="inv-meta">${esc(meta)}</span>
+      </span>
+      <span class="inv-cifras">
+        <span class="inv-valor">${fmt(Number(i.valor_actual), i.moneda)}</span>
+        <span class="inv-res ${cls}">${signo}${fmt(Math.abs(res), i.moneda)} (${signo}${Math.abs(pct).toFixed(1)}%)</span>
+      </span>
+    </button>`;
+  }).join("");
+
+  $$("#lista-inversiones .inv-item").forEach((b) =>
+    b.addEventListener("click", () => abrirModalInv(b.dataset.invId)));
+}
+
+function abrirModalInv(id = null) {
+  estado.editandoInvId = id;
+  $("#inv-error").classList.add("oculto");
+
+  if (id) {
+    const i = estado.inversiones.find((x) => x.id === id);
+    if (!i) return;
+    const cerrada = i.estado === "cerrada";
+    $("#modal-inv-titulo").textContent = cerrada ? "Inversión retirada" : "Editar inversión";
+    $("#i-tipo").value = i.tipo;
+    $("#i-nombre").value = i.nombre;
+    $("#i-moneda").value = i.moneda;
+    $("#i-monto").value = i.monto_invertido;
+    $("#i-valor").value = i.valor_actual;
+    $("#i-fecha").value = i.fecha;
+    $("#i-notas").value = i.notas || "";
+    $("#btn-borrar-inv").classList.remove("oculto");
+    $("#btn-retirar-inv").classList.toggle("oculto", cerrada);
+    // Una inversión retirada queda de solo lectura
+    $("#btn-guardar-inv").classList.toggle("oculto", cerrada);
+    setInvDisabled(cerrada);
+  } else {
+    $("#modal-inv-titulo").textContent = "Nueva inversión";
+    $("#i-tipo").value = "cripto";
+    $("#i-nombre").value = "";
+    $("#i-moneda").value = "USD";
+    $("#i-monto").value = "";
+    $("#i-valor").value = "";
+    $("#i-fecha").value = hoyISO();
+    $("#i-notas").value = "";
+    $("#btn-borrar-inv").classList.add("oculto");
+    $("#btn-retirar-inv").classList.add("oculto");
+    $("#btn-guardar-inv").classList.remove("oculto");
+    setInvDisabled(false);
+  }
+  $("#modal-inv").classList.remove("oculto");
+}
+
+function setInvDisabled(v) {
+  ["#i-tipo", "#i-nombre", "#i-moneda", "#i-monto", "#i-valor", "#i-fecha", "#i-notas"]
+    .forEach((s) => ($(s).disabled = v));
+}
+
+function cerrarModalInv() { $("#modal-inv").classList.add("oculto"); }
+
+function catInversionesId() {
+  const c = estado.categorias.find((x) => x.nombre === "Inversiones");
+  return c ? c.id : null;
+}
+
+async function guardarInversion(e) {
+  e.preventDefault();
+  const btn = $("#btn-guardar-inv");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  try {
+    const monto = parseFloat($("#i-monto").value);
+    if (!(monto > 0)) throw new Error("El capital invertido tiene que ser mayor a cero.");
+    const valorRaw = $("#i-valor").value;
+    const valor = valorRaw === "" ? monto : parseFloat(valorRaw);
+    if (!(valor >= 0)) throw new Error("El valor actual no puede ser negativo.");
+
+    const datos = {
+      tipo: $("#i-tipo").value,
+      nombre: $("#i-nombre").value.trim(),
+      monto_invertido: monto,
+      valor_actual: valor,
+      moneda: $("#i-moneda").value,
+      fecha: $("#i-fecha").value,
+      notas: $("#i-notas").value.trim() || null,
+    };
+
+    if (estado.editandoInvId) {
+      // Editar: actualizamos la inversión y sincronizamos el egreso de compra
+      const { error } = await supabase.from("inversiones").update(datos).eq("id", estado.editandoInvId);
+      if (error) throw error;
+      await supabase.from("movimientos")
+        .update({ monto, moneda: datos.moneda, fecha: datos.fecha, descripcion: `Inversión: ${datos.nombre}` })
+        .eq("inversion_id", estado.editandoInvId).eq("tipo", "egreso");
+    } else {
+      // Nueva: creamos la inversión y, atado, el egreso que saca la plata de la caja
+      datos.created_by = estado.uid;
+      datos.estado = "activa";
+      const { data: inv, error } = await supabase.from("inversiones").insert(datos).select("id").single();
+      if (error) throw error;
+      const egreso = {
+        tipo: "egreso", monto, moneda: datos.moneda, fecha: datos.fecha,
+        descripcion: `Inversión: ${datos.nombre}`,
+        categoria_id: catInversionesId(), inversion_id: inv.id, created_by: estado.uid,
+      };
+      const { error: eMov } = await supabase.from("movimientos").insert(egreso);
+      if (eMov) {
+        // Si falla el egreso, deshacemos la inversión para no dejar basura
+        await supabase.from("inversiones").delete().eq("id", inv.id);
+        throw eMov;
+      }
+    }
+
+    cerrarModalInv();
+    await cargarTodo();
+    render();
+    toast(estado.editandoInvId ? "Inversión actualizada" : "Inversión cargada");
+  } catch (err) {
+    mostrarError($("#inv-error"), traducirError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = "Guardar";
+  }
+}
+
+async function retirarInversion() {
+  if (!estado.editandoInvId) return;
+  const i = estado.inversiones.find((x) => x.id === estado.editandoInvId);
+  if (!i) return;
+  const valor = parseFloat($("#i-valor").value) || Number(i.valor_actual);
+  if (!confirm(`¿Retirar "${i.nombre}"? Vuelven ${fmt(valor, i.moneda)} a la caja y la inversión queda cerrada.`)) return;
+
+  const btn = $("#btn-retirar-inv");
+  btn.disabled = true; btn.textContent = "Retirando…";
+  try {
+    // 1) Entra la plata a la caja (ingreso atado a la inversión)
+    const ingreso = {
+      tipo: "ingreso", monto: valor, moneda: i.moneda, fecha: hoyISO(),
+      descripcion: `Retiro inversión: ${i.nombre}`,
+      categoria_id: catInversionesId(), inversion_id: i.id, created_by: estado.uid,
+    };
+    const { error: eMov } = await supabase.from("movimientos").insert(ingreso);
+    if (eMov) throw eMov;
+    // 2) La inversión queda cerrada con su valor final
+    const { error } = await supabase.from("inversiones")
+      .update({ estado: "cerrada", valor_actual: valor }).eq("id", i.id);
+    if (error) throw error;
+
+    cerrarModalInv();
+    await cargarTodo();
+    render();
+    toast("Inversión retirada");
+  } catch (err) {
+    mostrarError($("#inv-error"), traducirError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = "Retirar";
+  }
+}
+
+async function borrarInversion() {
+  if (!estado.editandoInvId) return;
+  if (!confirm("¿Borrar esta inversión? Se borran también sus movimientos de caja asociados. No se puede deshacer.")) return;
+  const { error } = await supabase.from("inversiones").delete().eq("id", estado.editandoInvId);
+  if (error) { mostrarError($("#inv-error"), traducirError(error)); return; }
+  cerrarModalInv();
+  await cargarTodo();
+  render();
+  toast("Inversión borrada");
 }
 
 // ============================================================
@@ -514,11 +752,22 @@ function conectarEventos() {
   // Config
   $("#form-categoria").addEventListener("submit", agregarCategoria);
   $("#form-proyecto").addEventListener("submit", agregarProyecto);
+
+  // Inversiones
+  $("#btn-nueva-inv").addEventListener("click", () => abrirModalInv());
+  $("#modal-inv-cerrar").addEventListener("click", cerrarModalInv);
+  $("#modal-inv").addEventListener("click", (e) => { if (e.target.id === "modal-inv") cerrarModalInv(); });
+  $("#form-inv").addEventListener("submit", guardarInversion);
+  $("#btn-retirar-inv").addEventListener("click", retirarInversion);
+  $("#btn-borrar-inv").addEventListener("click", borrarInversion);
 }
 
 function cambiarTab(nombre) {
+  estado.tabActual = nombre;
   $$(".tab").forEach((t) => t.classList.toggle("activa", t.dataset.tab === nombre));
   $$(".panel").forEach((p) => p.classList.toggle("oculto", p.dataset.panel !== nombre));
+  // El botón flotante (+) agrega movimientos; en Inversiones usamos su propio botón.
+  $("#btn-agregar").classList.toggle("oculto", nombre === "inversiones");
 }
 
 // ============================================================

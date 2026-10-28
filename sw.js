@@ -10,7 +10,7 @@
 //     internet, la app abre igual y avisa que estás sin conexión.
 // ============================================================
 
-const CACHE = "contable-gular-v3";
+const CACHE = "contable-gular-v4";
 
 const APP_SHELL = [
   "./",

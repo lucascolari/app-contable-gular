@@ -25,6 +25,11 @@ quién cargó cada movimiento.
    el contenido, pegalo y apretá **Run**.
 3. Tiene que decir *Success*. Esto crea las tablas, los índices y las reglas de acceso.
 
+   > **¿Ya tenías la app funcionando de antes?** No vuelvas a correr todo el
+   > `schema.sql`. Para sumar la sección de **Inversiones**, corré una sola vez
+   > el archivo [`db/migracion-inversiones.sql`](db/migracion-inversiones.sql)
+   > en el SQL Editor. Es seguro: no toca tus datos actuales.
+
 ### 3) Crear el bucket de comprobantes
 1. Menú izquierdo: **Storage** → **New bucket**.
 2. Nombre: `comprobantes`. **Public: NO** (dejalo privado). Crear.
@@ -94,6 +99,10 @@ Después abrí la dirección que te muestra (ej. `http://localhost:3000`).
   quién lo cargó y mes.
 - **Cargar movimiento:** botón **+**. Ingreso/egreso, monto, moneda, fecha,
   descripción, categoría, proyecto y **comprobante** (foto o PDF).
+- **Inversiones:** cartera de cripto, acciones, oro y otras. Cargás el capital
+  invertido y actualizás el valor actual a mano; la app calcula la ganancia o
+  pérdida (en plata y en %). Al invertir, la plata **sale de la caja**; al
+  **retirar**, vuelve con su valor actual.
 - **Ajustes:** crear/borrar categorías y proyectos.
 
 ## Ideas para más adelante (no incluidas todavía)

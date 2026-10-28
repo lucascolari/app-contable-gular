@@ -266,6 +266,47 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--i
 .mov-monto.egreso { color: var(--egreso); }
 .mov-clip { font-size: .7rem; }
 .vacio { text-align: center; color: var(--muted); padding: 40px 10px; font-family: var(--font-display); font-size: 1.05rem; }
+.mov-inv { cursor: default; }
+.mov-inv:hover { background: var(--surface); border-color: var(--line); }
+.mov-inv .mov-ico { background: rgba(37,99,235,.12); color: #2563eb; }
+
+/* ============================================================
+   Inversiones
+   ============================================================ */
+.inv-resumen { display: grid; gap: 10px; margin-bottom: 16px; }
+.inv-tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radio); padding: 16px; }
+.inv-tarjeta-mon { display: block; color: var(--muted); font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px; }
+.inv-tarjeta-fila { display: flex; justify-content: space-between; align-items: baseline; font-size: .9rem; padding: 3px 0; }
+.inv-tarjeta-fila span { color: var(--muted); }
+.inv-tarjeta-fila strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.inv-tarjeta-fila.resultado { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.inv-tarjeta-fila.resultado strong { font-family: var(--font-display); font-size: 1.15rem; font-weight: 400; }
+.inv-tarjeta-fila.resultado span { color: var(--ink); }
+.inv-tarjeta-fila.ingreso strong { color: var(--ingreso); }
+.inv-tarjeta-fila.egreso strong { color: var(--egreso); }
+
+.btn-nueva-inv { width: 100%; margin-bottom: 16px; }
+.btn-secundario { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+
+.lista-inv { display: grid; gap: 8px; }
+.inv-item {
+  display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  cursor: pointer; text-align: left; width: 100%; color: inherit; font: inherit;
+  transition: background .25s, border-color .25s;
+}
+.inv-item:hover { background: #fafafa; border-color: var(--ink); }
+.inv-item.cerrada { opacity: .6; }
+.inv-ico { width: 42px; height: 42px; border-radius: 10px; display: grid; place-content: center; font-size: 1.2rem; background: rgba(37,99,235,.1); }
+.inv-info { min-width: 0; }
+.inv-nombre { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-meta { display: block; color: var(--muted); font-size: .75rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-badge { font-size: .62rem; text-transform: uppercase; letter-spacing: .04em; background: var(--line); color: var(--muted); padding: 2px 7px; border-radius: 999px; vertical-align: middle; font-weight: 600; }
+.inv-cifras { text-align: right; white-space: nowrap; }
+.inv-valor { display: block; font-weight: 700; font-variant-numeric: tabular-nums; }
+.inv-res { display: block; font-size: .74rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.inv-res.ingreso { color: var(--ingreso); }
+.inv-res.egreso { color: var(--egreso); }
 
 /* Config */
 .lista-config { display: grid; gap: 8px; margin-bottom: 12px; }

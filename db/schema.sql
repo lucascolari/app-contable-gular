@@ -41,6 +41,23 @@ create table if not exists public.proyectos (
   created_at  timestamptz not null default now()
 );
 
+-- Inversiones de Gular (cripto, acciones, oro, otras). Se definen antes de
+-- movimientos porque éstos las referencian (al invertir/retirar).
+create table if not exists public.inversiones (
+  id              uuid primary key default gen_random_uuid(),
+  tipo            text not null check (tipo in ('cripto','acciones','oro','otras')),
+  nombre          text not null,
+  monto_invertido numeric(14,2) not null check (monto_invertido > 0),  -- capital puesto
+  valor_actual    numeric(14,2) not null check (valor_actual >= 0),    -- cuánto vale hoy (a mano)
+  moneda          text not null default 'USD' check (moneda in ('ARS','USD')),
+  fecha           date not null default current_date,
+  estado          text not null default 'activa' check (estado in ('activa','cerrada')),
+  notas           text,
+  created_by      uuid not null references public.profiles(id),
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
 -- Movimientos de caja (lo central)
 create table if not exists public.movimientos (
   id               uuid primary key default gen_random_uuid(),
@@ -51,6 +68,7 @@ create table if not exists public.movimientos (
   descripcion      text not null,
   categoria_id     uuid references public.categorias(id) on delete set null,
   proyecto_id      uuid references public.proyectos(id) on delete set null,
+  inversion_id     uuid references public.inversiones(id) on delete cascade,  -- si nace de una inversión
   comprobante_path text,                       -- ruta del archivo en Storage (opcional)
   created_by       uuid not null references public.profiles(id),  -- quién lo cargó
   created_at       timestamptz not null default now(),
@@ -63,6 +81,8 @@ create index if not exists idx_mov_fecha     on public.movimientos (fecha desc);
 create index if not exists idx_mov_categoria on public.movimientos (categoria_id);
 create index if not exists idx_mov_proyecto  on public.movimientos (proyecto_id);
 create index if not exists idx_mov_creador   on public.movimientos (created_by);
+create index if not exists idx_mov_inversion on public.movimientos (inversion_id);
+create index if not exists idx_inv_estado    on public.inversiones (estado);
 
 
 -- Mantiene updated_at al día automáticamente
@@ -76,6 +96,10 @@ $$;
 
 drop trigger if exists trg_mov_touch on public.movimientos;
 create trigger trg_mov_touch before update on public.movimientos
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_inv_touch on public.inversiones;
+create trigger trg_inv_touch before update on public.inversiones
   for each row execute function public.touch_updated_at();
 
 
@@ -101,6 +125,7 @@ $$;
 alter table public.profiles    enable row level security;
 alter table public.categorias  enable row level security;
 alter table public.proyectos   enable row level security;
+alter table public.inversiones enable row level security;
 alter table public.movimientos enable row level security;
 
 -- --- profiles ---
@@ -123,6 +148,20 @@ create policy "miembros leen proyectos" on public.proyectos
 drop policy if exists "miembros gestionan proyectos" on public.proyectos;
 create policy "miembros gestionan proyectos" on public.proyectos
   for all using (public.es_miembro()) with check (public.es_miembro());
+
+-- --- inversiones ---
+drop policy if exists "miembros leen inversiones" on public.inversiones;
+create policy "miembros leen inversiones" on public.inversiones
+  for select using (public.es_miembro());
+drop policy if exists "miembros crean inversiones" on public.inversiones;
+create policy "miembros crean inversiones" on public.inversiones
+  for insert with check (public.es_miembro() and created_by = auth.uid());
+drop policy if exists "miembros editan inversiones" on public.inversiones;
+create policy "miembros editan inversiones" on public.inversiones
+  for update using (public.es_miembro()) with check (public.es_miembro());
+drop policy if exists "miembros borran inversiones" on public.inversiones;
+create policy "miembros borran inversiones" on public.inversiones
+  for delete using (public.es_miembro());
 
 -- --- movimientos ---
 drop policy if exists "miembros leen movimientos" on public.movimientos;
@@ -177,6 +216,7 @@ select * from (values
   ('Herramientas / Software','egreso', '#9333ea'),
   ('Impuestos',             'egreso',  '#ea580c'),
   ('Retiros socios',        'egreso',  '#f59e0b'),
+  ('Inversiones',           'egreso',  '#2563eb'),
   ('Otros gastos',          'egreso',  '#78716c')
 ) as v(nombre, tipo, color)
 where not exists (select 1 from public.categorias);

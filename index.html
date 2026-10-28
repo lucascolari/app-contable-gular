@@ -152,6 +152,13 @@
         <div id="lista-movimientos" class="lista"></div>
       </section>
 
+      <!-- ---------- INVERSIONES ---------- -->
+      <section class="panel oculto" data-panel="inversiones">
+        <div id="inv-resumen" class="inv-resumen"></div>
+        <button id="btn-nueva-inv" class="btn btn-primario btn-nueva-inv">+ Nueva inversión</button>
+        <div id="lista-inversiones" class="lista-inv"></div>
+      </section>
+
       <!-- ---------- CONFIG ---------- -->
       <section class="panel oculto" data-panel="config">
         <h2 class="subtitulo">Categorías</h2>
@@ -182,6 +189,7 @@
     <nav class="tabbar">
       <button class="tab activa" data-tab="resumen">Resumen</button>
       <button class="tab" data-tab="movimientos">Movimientos</button>
+      <button class="tab" data-tab="inversiones">Inversiones</button>
       <button class="tab" data-tab="config">Ajustes</button>
     </nav>
   </div>
@@ -237,6 +245,59 @@
       <div class="modal-acciones">
         <button type="button" id="btn-borrar" class="btn btn-peligro oculto">Borrar</button>
         <button type="submit" id="btn-guardar" class="btn btn-primario">Guardar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ====================== MODAL INVERSIÓN ====================== -->
+  <div id="modal-inv" class="modal oculto">
+    <form id="form-inv" class="modal-card">
+      <div class="modal-head">
+        <strong id="modal-inv-titulo">Nueva inversión</strong>
+        <button type="button" class="btn-icono" id="modal-inv-cerrar" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="filtros-fila">
+        <label>Tipo
+          <select id="i-tipo">
+            <option value="cripto">Cripto</option>
+            <option value="acciones">Acciones</option>
+            <option value="oro">Oro</option>
+            <option value="otras">Otras</option>
+          </select>
+        </label>
+        <label>Fecha
+          <input type="date" id="i-fecha" required />
+        </label>
+      </div>
+
+      <label>Nombre
+        <input type="text" id="i-nombre" required maxlength="80" placeholder="Ej: Bitcoin, Apple, Oro…" />
+      </label>
+
+      <label>Capital invertido</label>
+      <div class="campo-monto">
+        <select id="i-moneda">
+          <option value="USD">USD US$</option>
+          <option value="ARS">ARS $</option>
+        </select>
+        <input type="number" id="i-monto" placeholder="0,00" step="0.01" min="0.01" required inputmode="decimal" />
+      </div>
+
+      <label>Valor actual (cuánto vale hoy)
+        <input type="number" id="i-valor" step="0.01" min="0" inputmode="decimal" placeholder="Si recién empezás, dejalo igual al invertido" />
+      </label>
+
+      <label>Notas (opcional)
+        <input type="text" id="i-notas" maxlength="140" placeholder="Ej: 0,1 BTC en Binance" />
+      </label>
+
+      <p id="inv-error" class="error oculto"></p>
+
+      <div class="modal-acciones">
+        <button type="button" id="btn-borrar-inv" class="btn btn-peligro oculto">Borrar</button>
+        <button type="button" id="btn-retirar-inv" class="btn btn-secundario oculto">Retirar</button>
+        <button type="submit" id="btn-guardar-inv" class="btn btn-primario">Guardar</button>
       </div>
     </form>
   </div>
