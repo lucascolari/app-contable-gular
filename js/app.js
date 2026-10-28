@@ -290,9 +290,9 @@ function renderMovimientos() {
       m.profiles?.nombre
     ].filter(Boolean).join(" · ");
     return `<button class="mov${esInv ? " mov-inv" : ""}" data-id="${m.id}" data-inv="${esInv ? 1 : ""}">
-      <span class="mov-ico ${m.tipo}">${esInv ? "📈" : (m.tipo === "ingreso" ? "↓" : "↑")}</span>
+      <span class="mov-ico ${m.tipo}">${m.tipo === "ingreso" ? "↓" : "↑"}</span>
       <span class="mov-info">
-        <span class="mov-desc">${esc(m.descripcion)} ${m.comprobante_path ? '<span class="mov-clip">📎</span>' : ""}</span>
+        <span class="mov-desc">${esc(m.descripcion)}</span>
         <span class="mov-meta">${esc(meta)}</span>
       </span>
       <span class="mov-monto ${m.tipo}">${signo}${fmt(Number(m.monto), m.moneda)}</span>
@@ -335,7 +335,7 @@ function renderConfig() {
 //  "en papel" hasta que se retira.
 // ============================================================
 const TIPO_INV = { cripto: "Cripto", acciones: "Acciones", oro: "Oro", otras: "Otras" };
-const ICONO_INV = { cripto: "₿", acciones: "📊", oro: "🥇", otras: "💼" };
+const ICONO_INV = { cripto: "Cr", acciones: "Ac", oro: "Or", otras: "Ot" };
 
 function renderInversiones() {
   const activas = estado.inversiones.filter((i) => i.estado === "activa");
@@ -363,7 +363,7 @@ function renderInversiones() {
       </div>
     </div>`;
   }).join("");
-  cont.innerHTML = bloques || `<p class="vacio">Todavía no hay inversiones activas. Cargá la primera 👇</p>`;
+  cont.innerHTML = bloques || `<p class="vacio">Todavía no hay inversiones activas. Cargá la primera abajo.</p>`;
 
   // ----- Lista de inversiones -----
   const lista = $("#lista-inversiones");
@@ -377,7 +377,7 @@ function renderInversiones() {
     const cerrada = i.estado === "cerrada";
     const meta = [TIPO_INV[i.tipo] || i.tipo, fechaCorta(i.fecha), i.profiles?.nombre].filter(Boolean).join(" · ");
     return `<button class="inv-item${cerrada ? " cerrada" : ""}" data-inv-id="${i.id}">
-      <span class="inv-ico">${ICONO_INV[i.tipo] || "💼"}</span>
+      <span class="inv-ico">${ICONO_INV[i.tipo] || "Ot"}</span>
       <span class="inv-info">
         <span class="inv-nombre">${esc(i.nombre)} ${cerrada ? '<span class="inv-badge">retirada</span>' : ""}</span>
         <span class="inv-meta">${esc(meta)}</span>

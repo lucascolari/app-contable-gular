@@ -1,4 +1,4 @@
-# Contable Gular 💵
+# Contable Gular
 
 App web (PWA) para llevar la contabilidad interna de Gular: ingresos, egresos,
 saldo en caja, resumen por mes, filtros, multimoneda (ARS/USD) y comprobantes.
@@ -52,14 +52,14 @@ quién cargó cada movimiento.
    where email = 'EMAIL_DE_TU_SOCIO'
    on conflict (id) do nothing;
    ```
-   > ⚠️ Importante: si alguien se autentica pero **no** está en `profiles`,
+   > Importante: si alguien se autentica pero **no** está en `profiles`,
    > la app lo rechaza. Así solo entran los miembros de Gular.
 
 3. (Recomendado) **Authentication → Providers → Email**: desactivá
    *"Allow new users to sign up"* para que nadie pueda registrarse solo.
 
 ### 5) Conectar la app con tus claves
-1. En Supabase: **Settings** (⚙) → **API**.
+1. En Supabase: **Settings** → **API**.
 2. Copiá:
    - **Project URL**
    - En *Project API keys*, la clave **`anon` `public`**
