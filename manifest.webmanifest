@@ -1,0 +1,26 @@
+{
+  "name": "Contable Gular",
+  "short_name": "Gular",
+  "description": "Contabilidad interna de Gular: ingresos, egresos y saldo.",
+  "lang": "es-AR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "assets/img/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/app-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

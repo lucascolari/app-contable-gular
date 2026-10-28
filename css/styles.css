@@ -1,0 +1,350 @@
+/* ============================================================
+   Contable Gular — identidad "editorial blanco" de Gular
+   Fondo blanco, serif de marca (Sahlia) + Satoshi, acento rojo
+   Gular (#e83b2f), isotipo "g", intro y fondo de partículas.
+   Verde = ingreso · Rojo = egreso (claridad financiera).
+   ============================================================ */
+
+/* ---------- Fuentes de marca (self-host) ---------- */
+@font-face {
+  font-family: "Sahlia";
+  src: url("../assets/fonts/sahlia.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("../assets/fonts/satoshi.woff2") format("woff2");
+  font-weight: 300 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("../assets/fonts/satoshi-italic.woff2") format("woff2");
+  font-weight: 300 900; font-style: italic; font-display: swap;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #0a0a0a;
+  --ink: #0a0a0a;
+  --muted: #8a8a8a;        /* gris suave para labels / metadatos */
+  --line: rgba(0,0,0,.12);
+  --line-soft: rgba(0,0,0,.07);
+  --field: #fafafa;
+  --inverse: #ffffff;
+
+  --accent: #e83b2f;       /* rojo Gular */
+  --accent-2: #cf2d22;
+  --ingreso: #1f8f4e;      /* verde = entra */
+  --egreso: #e83b2f;       /* rojo = sale (rojo Gular) */
+
+  --font-display: "Sahlia", Georgia, "Times New Roman", serif;
+  --font-body: "Satoshi", "Inter", system-ui, sans-serif;
+  --font-intro: "Archivo", system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --radio: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+  overflow-x: hidden;
+}
+.oculto { display: none !important; }
+code { background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 6px; font-size: .9em; }
+.tenue { color: var(--muted); font-size: .85rem; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 400; }
+::selection { background: var(--ink); color: var(--inverse); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Grano sutil sobre el blanco (mata el banding) */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 5;
+  pointer-events: none; opacity: .3; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
+}
+/* Fallback de partículas por CSS si no hay WebGL (puntos negros) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(1.2px 1.2px at 20% 30%, rgba(0,0,0,.5), transparent),
+    radial-gradient(1.2px 1.2px at 70% 60%, rgba(0,0,0,.4), transparent),
+    radial-gradient(1.6px 1.6px at 40% 80%, rgba(0,0,0,.45), transparent),
+    radial-gradient(1.2px 1.2px at 85% 25%, rgba(0,0,0,.4), transparent),
+    radial-gradient(1.2px 1.2px at 55% 15%, rgba(0,0,0,.35), transparent);
+  opacity: 0; transition: opacity .8s ease;
+}
+html[data-webgl="off"] body::before { opacity: 1; }
+
+/* Canvas de partículas (WebGL), detrás de todo el contenido */
+.space-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; pointer-events: none; }
+
+/* ============================================================
+   Isotipo "g" de Gular (máscara SVG; la cola gira)
+   ============================================================ */
+.iso { display: block; position: relative; aspect-ratio: 164 / 255; perspective: 600px; }
+.iso__top, .iso__tail {
+  position: absolute; inset: 0; background-color: var(--ink);
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+.iso__top { -webkit-mask-image: url("../assets/img/isomenu-top.svg"); mask-image: url("../assets/img/isomenu-top.svg"); }
+.iso__tail {
+  -webkit-mask-image: url("../assets/img/isomenu-tail.svg"); mask-image: url("../assets/img/isomenu-tail.svg");
+  transform-origin: 45% 76%; animation: iso-spin 6s linear infinite;
+}
+@keyframes iso-spin { from { transform: rotateX(58deg) rotateZ(0deg); } to { transform: rotateX(58deg) rotateZ(360deg); } }
+
+/* Wordmark gular + agency */
+.brand { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; line-height: 1; }
+.brand .agency {
+  font-family: var(--font-body); font-style: italic; font-weight: 400; letter-spacing: -0.01em;
+  background: linear-gradient(90deg, #0a0a0a 0%, #0a0a0a 25%, rgba(10,10,10,.12) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   Intro / ceremonia (pantalla negra, letras crema)
+   ============================================================ */
+.intro {
+  position: fixed; inset: 0; z-index: 90;
+  background: #05060d; display: grid; place-content: center;
+  transition: opacity 1s var(--ease-out-expo), visibility 1s;
+}
+.intro.is-hidden { opacity: 0; visibility: hidden; }
+.intro__stage { position: relative; display: grid; place-items: center; width: min(90vw, 780px); min-height: 42vh; }
+.intro__beat { grid-area: 1 / 1; opacity: 0; transform: translateY(10px); transition: opacity .7s var(--ease-out-expo), transform 1s var(--ease-out-expo); }
+.intro__g .iso { width: clamp(66px, 13vw, 132px); }
+.intro__g .iso__top, .intro__g .iso__tail { background-color: #f3efe6; }
+.intro__word { margin: 0; text-align: center; font-family: var(--font-intro); font-weight: 800; color: #f3efe6; font-size: clamp(2rem, 7vw, 5rem); line-height: 1; letter-spacing: -0.03em; }
+.intro__word--singular { font-weight: 700; letter-spacing: .14em; }
+.intro[data-step="g1"] .intro__g,
+.intro[data-step="g2"] .intro__g,
+.intro[data-step="frase"] [data-beat="frase"],
+.intro[data-step="singular"] [data-beat="singular"] { opacity: 1; transform: none; }
+.intro__skip {
+  position: absolute; bottom: 1.6rem; left: 50%; transform: translateX(-50%);
+  background: none; border: 0; color: rgba(243,239,230,.5); cursor: pointer;
+  font-family: var(--font-body); font-size: .64rem; letter-spacing: .22em; text-transform: uppercase;
+}
+body.intro-lock { overflow: hidden; }
+
+/* ============================================================
+   Splash (carga) — marca Gular sobre blanco
+   ============================================================ */
+.splash {
+  position: fixed; inset: 0; display: grid; place-content: center; justify-items: center;
+  gap: 16px; background: var(--bg); z-index: 40;
+}
+.splash .iso, .splash-logo { width: 54px; }
+.splash p, .splash .brand { font-family: var(--font-display); font-size: 1.5rem; color: var(--ink); }
+
+/* ============================================================
+   Vistas (setup / login)
+   ============================================================ */
+.vista { min-height: 100dvh; padding: 24px; position: relative; z-index: 10; }
+.centro { display: grid; place-content: center; }
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radio); padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,.08);
+}
+.card-aviso { max-width: 420px; }
+.card-aviso h1 { margin-top: 0; font-size: 1.3rem; }
+
+.card-login { width: min(390px, 92vw); display: grid; gap: 14px; text-align: center; }
+.card-login .iso, .card-login .login-logo { width: 40px; margin: 0 auto; }
+.card-login .brand { font-size: 2rem; margin: 2px 0 0; }
+.card-login h1 { font-size: 2rem; }
+.card-login label { text-align: left; display: grid; gap: 6px; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
+
+input, select, textarea {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--field); color: var(--text);
+  font-size: 16px; font-family: var(--font-body);
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); }
+
+/* ============================================================
+   Botones
+   ============================================================ */
+.btn {
+  border: 1px solid var(--ink); border-radius: 999px; padding: 13px 20px;
+  font-size: .95rem; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; color: var(--inverse); background: var(--ink);
+  transition: transform .25s var(--ease-out-expo), opacity .25s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-primario { background: var(--ink); color: var(--inverse); }
+.btn-peligro { background: var(--egreso); border-color: var(--egreso); }
+.btn-chico { padding: 10px 16px; font-size: .88rem; }
+.btn-chip {
+  background: var(--surface); border: 1px solid var(--line); color: var(--text);
+  padding: 8px 14px; border-radius: 999px; font-size: .78rem; cursor: pointer; font-weight: 500;
+}
+.btn-chip:hover { border-color: var(--ink); }
+.btn-icono {
+  background: var(--surface); border: 1px solid var(--line); color: var(--text);
+  width: 42px; height: 42px; border-radius: 10px; font-size: 1.3rem; cursor: pointer; line-height: 1;
+}
+.btn-icono:hover { border-color: var(--ink); }
+.error { color: var(--accent); font-size: .85rem; margin: 2px 0; }
+
+/* ============================================================
+   Topbar / saldos
+   ============================================================ */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(255,255,255,.82); backdrop-filter: blur(14px);
+  padding: calc(env(safe-area-inset-top) + 14px) 18px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.topbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.marca.brand, .topbar .brand { font-size: 1.5rem; }
+.saldos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.saldo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.saldo-label { display: block; color: var(--muted); font-size: .7rem; letter-spacing: .02em; }
+.saldo-monto { display: block; font-family: var(--font-display); font-size: 1.5rem; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Contenido / paneles
+   ============================================================ */
+.contenido { padding: 16px 16px 120px; max-width: 640px; margin: 0 auto; position: relative; z-index: 10; }
+.subtitulo { font-family: var(--font-display); font-size: 1.15rem; color: var(--ink); margin: 24px 0 12px; font-weight: 400; }
+
+/* Resumen */
+.mes-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
+.mes-nav strong { min-width: 160px; text-align: center; font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; }
+.mes-nav strong::first-letter { text-transform: uppercase; }
+.tarjetas-resumen { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.mini-card span { color: var(--muted); font-size: .76rem; }
+.mini-card strong { display: block; font-family: var(--font-display); font-size: 1.4rem; margin-top: 4px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.mini-card.ingreso strong { color: var(--ingreso); }
+.mini-card.egreso strong { color: var(--egreso); }
+.mini-card.neto { grid-column: span 2; }
+
+.desglose { display: grid; gap: 8px; }
+.desglose-fila { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
+.desglose-top { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: 8px; }
+.desglose-top strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.barra { height: 6px; background: var(--line-soft); border-radius: 999px; overflow: hidden; }
+.barra > i { display: block; height: 100%; border-radius: 999px; }
+
+/* Filtros */
+.filtros { display: grid; gap: 10px; margin-bottom: 16px; }
+.filtros-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Lista de movimientos */
+.lista { display: grid; gap: 8px; }
+.mov {
+  display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  cursor: pointer; text-align: left; width: 100%; color: inherit; font: inherit;
+  transition: background .25s, border-color .25s;
+}
+.mov:hover { background: #fafafa; border-color: var(--ink); }
+.mov-ico { width: 42px; height: 42px; border-radius: 10px; display: grid; place-content: center; font-size: 1.1rem; }
+.mov-ico.ingreso { background: rgba(31,143,78,.12); color: var(--ingreso); }
+.mov-ico.egreso { background: rgba(232,59,47,.12); color: var(--egreso); }
+.mov-info { min-width: 0; }
+.mov-desc { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mov-meta { display: block; color: var(--muted); font-size: .75rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mov-monto { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mov-monto.ingreso { color: var(--ingreso); }
+.mov-monto.egreso { color: var(--egreso); }
+.mov-clip { font-size: .7rem; }
+.vacio { text-align: center; color: var(--muted); padding: 40px 10px; font-family: var(--font-display); font-size: 1.05rem; }
+
+/* Config */
+.lista-config { display: grid; gap: 8px; margin-bottom: 12px; }
+.chip-config {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+}
+.chip-config .punto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.chip-config button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; }
+.chip-config button:hover { color: var(--egreso); }
+.form-inline { display: flex; gap: 8px; margin-bottom: 8px; }
+.form-inline input { flex: 1; }
+.form-inline select { width: auto; }
+
+/* ============================================================
+   FAB + Tabbar
+   ============================================================ */
+.fab {
+  position: fixed; right: 18px; bottom: calc(76px + env(safe-area-inset-bottom));
+  width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
+  font-size: 2rem; color: var(--inverse); background: var(--ink);
+  box-shadow: 0 10px 26px rgba(0,0,0,.28); z-index: 30;
+  transition: transform .25s var(--ease-out-expo);
+}
+.fab:hover { transform: scale(1.06); }
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: rgba(255,255,255,.92); backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  background: none; border: none; color: var(--muted); padding: 16px 0; font-size: .85rem; cursor: pointer;
+  border-top: 2px solid transparent; font-family: var(--font-body);
+}
+.tab.activa { color: var(--accent); border-top-color: var(--accent); font-weight: 600; }
+
+/* ============================================================
+   Modal
+   ============================================================ */
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(10,10,10,.4); display: flex; align-items: flex-end; justify-content: center; }
+.modal-card {
+  width: min(520px, 100%); max-height: 92dvh; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px 20px 0 0; padding: 20px; display: grid; gap: 13px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+@media (min-width: 560px) { .modal { align-items: center; } .modal-card { border-radius: 20px; } }
+.modal-head { display: flex; justify-content: space-between; align-items: center; }
+.modal-head strong { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; }
+.modal-card label { display: grid; gap: 6px; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; background: #f0f0f0; padding: 5px; border-radius: 10px; }
+.seg-op { position: relative; }
+.seg-op input { position: absolute; opacity: 0; inset: 0; }
+.seg-op span { display: block; text-align: center; padding: 10px; border-radius: 8px; color: var(--muted); font-weight: 600; transition: background .2s, color .2s; }
+.seg-op input:checked + span { background: var(--ink); color: var(--inverse); }
+.seg-op input[value="ingreso"]:checked + span { background: var(--ingreso); color: #fff; }
+.seg-op input[value="egreso"]:checked + span { background: var(--egreso); color: #fff; }
+
+.campo-monto { display: grid; grid-template-columns: 120px 1fr; gap: 8px; }
+.campo-monto input { font-family: var(--font-display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+
+.modal-acciones { display: flex; gap: 10px; margin-top: 4px; }
+.modal-acciones .btn { flex: 1; }
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+  position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--ink); color: var(--inverse);
+  padding: 12px 20px; border-radius: 999px; box-shadow: 0 10px 26px rgba(0,0,0,.25); z-index: 60; max-width: 90vw;
+  font-size: .9rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso__tail { animation: none; transform: rotateX(58deg) rotateZ(25deg); }
+  .intro__beat { transition: none; }
+  body::after { display: none; }
+  .btn:hover, .fab:hover, .mov:hover { transform: none; }
+}

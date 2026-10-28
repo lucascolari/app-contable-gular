@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Contable Gular</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/img/isomenu.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/img/isomenu.svg" />
+
+  <!-- Archivo (solo para la ceremonia de intro). Sahlia y Satoshi son self-host. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Si no hay JS, no dejamos la intro tapando la app -->
+  <noscript><style>.intro{display:none!important}</style></noscript>
+
+  <!-- Three.js (fijado por versión) para el fondo de partículas -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ====================== INTRO / CEREMONIA ====================== -->
+  <div class="intro" id="intro" data-step="pre">
+    <div class="intro__stage">
+      <div class="intro__beat intro__g">
+        <span class="iso"><span class="iso__top"></span><span class="iso__tail"></span></span>
+      </div>
+      <p class="intro__beat intro__word" data-beat="frase">No hay solución</p>
+      <p class="intro__beat intro__word intro__word--singular" data-beat="singular">SINGULAR</p>
+    </div>
+    <button class="intro__skip" id="intro-skip" type="button">Saltar</button>
+  </div>
+
+  <!-- ====================== FONDO DE PARTÍCULAS ====================== -->
+  <canvas id="space" class="space-canvas" aria-hidden="true"></canvas>
+
+  <!-- ====================== CARGANDO ====================== -->
+  <div id="splash" class="splash">
+    <span class="iso"><span class="iso__top"></span><span class="iso__tail"></span></span>
+    <span class="brand">gular<span class="agency">agency</span></span>
+  </div>
+
+  <!-- ====================== AVISO DE CONFIG ====================== -->
+  <section id="vista-setup" class="vista centro oculto">
+    <div class="card card-aviso">
+      <h1>Falta conectar Supabase</h1>
+      <p>Abrí <code>js/config.js</code> y pegá tu <strong>Project URL</strong> y tu clave
+         <strong>anon public</strong>. Después recargá.</p>
+      <p class="tenue">Los pasos completos están en el archivo <code>README.md</code>.</p>
+    </div>
+  </section>
+
+  <!-- ====================== LOGIN ====================== -->
+  <section id="vista-login" class="vista centro oculto">
+    <form id="form-login" class="card card-login" autocomplete="on">
+      <span class="iso"><span class="iso__top"></span><span class="iso__tail"></span></span>
+      <span class="brand">gular<span class="agency">agency</span></span>
+      <p class="tenue">Contabilidad interna · ingresá con tu cuenta</p>
+      <label>Email
+        <input type="email" id="login-email" required autocomplete="username" inputmode="email" />
+      </label>
+      <label>Contraseña
+        <input type="password" id="login-pass" required autocomplete="current-password" />
+      </label>
+      <p id="login-error" class="error oculto"></p>
+      <button type="submit" class="btn btn-primario" id="login-btn">Entrar</button>
+    </form>
+  </section>
+
+  <!-- ====================== APP ====================== -->
+  <div id="app" class="oculto">
+
+    <!-- Encabezado con saldo -->
+    <header class="topbar">
+      <div class="topbar-row">
+        <span class="marca brand">gular<span class="agency">agency</span></span>
+        <button id="btn-salir" class="btn-chip" title="Cerrar sesión">
+          <span id="quien">—</span> · Salir
+        </button>
+      </div>
+      <div class="saldos">
+        <div class="saldo">
+          <span class="saldo-label">Saldo en caja (ARS)</span>
+          <span class="saldo-monto" id="saldo-ars">$0</span>
+        </div>
+        <div class="saldo">
+          <span class="saldo-label">Saldo en caja (USD)</span>
+          <span class="saldo-monto" id="saldo-usd">US$0</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="contenido">
+
+      <!-- ---------- RESUMEN ---------- -->
+      <section class="panel" data-panel="resumen">
+        <div class="mes-nav">
+          <button class="btn-icono" id="mes-prev" aria-label="Mes anterior">‹</button>
+          <strong id="mes-titulo">—</strong>
+          <button class="btn-icono" id="mes-next" aria-label="Mes siguiente">›</button>
+        </div>
+        <div class="tarjetas-resumen">
+          <div class="mini-card ingreso">
+            <span>Entró</span>
+            <strong id="res-ingresos">$0</strong>
+          </div>
+          <div class="mini-card egreso">
+            <span>Salió</span>
+            <strong id="res-egresos">$0</strong>
+          </div>
+          <div class="mini-card neto">
+            <span>Neto del mes</span>
+            <strong id="res-neto">$0</strong>
+          </div>
+        </div>
+        <h2 class="subtitulo">En qué se fue la plata (egresos del mes)</h2>
+        <div id="desglose-categorias" class="desglose"></div>
+      </section>
+
+      <!-- ---------- MOVIMIENTOS ---------- -->
+      <section class="panel oculto" data-panel="movimientos">
+        <div class="filtros">
+          <input type="search" id="f-texto" placeholder="Buscar descripción…" />
+          <div class="filtros-fila">
+            <select id="f-tipo">
+              <option value="">Todo tipo</option>
+              <option value="ingreso">Ingresos</option>
+              <option value="egreso">Egresos</option>
+            </select>
+            <select id="f-categoria"><option value="">Toda categoría</option></select>
+          </div>
+          <div class="filtros-fila">
+            <select id="f-proyecto"><option value="">Todo proyecto</option></select>
+            <select id="f-creador"><option value="">Cualquiera</option></select>
+          </div>
+          <div class="filtros-fila">
+            <input type="month" id="f-mes" />
+            <button class="btn-chip" id="f-limpiar">Limpiar</button>
+          </div>
+        </div>
+        <div id="lista-movimientos" class="lista"></div>
+      </section>
+
+      <!-- ---------- CONFIG ---------- -->
+      <section class="panel oculto" data-panel="config">
+        <h2 class="subtitulo">Categorías</h2>
+        <div id="lista-categorias" class="lista-config"></div>
+        <form id="form-categoria" class="form-inline">
+          <input type="text" id="cat-nombre" placeholder="Nueva categoría" required />
+          <select id="cat-tipo">
+            <option value="egreso">Egreso</option>
+            <option value="ingreso">Ingreso</option>
+          </select>
+          <button class="btn btn-chico">Agregar</button>
+        </form>
+
+        <h2 class="subtitulo">Proyectos / clientes</h2>
+        <div id="lista-proyectos" class="lista-config"></div>
+        <form id="form-proyecto" class="form-inline">
+          <input type="text" id="proy-nombre" placeholder="Nuevo proyecto" required />
+          <button class="btn btn-chico">Agregar</button>
+        </form>
+      </section>
+
+    </main>
+
+    <!-- Botón flotante para agregar -->
+    <button id="btn-agregar" class="fab" aria-label="Agregar movimiento">+</button>
+
+    <!-- Barra de navegación inferior -->
+    <nav class="tabbar">
+      <button class="tab activa" data-tab="resumen">Resumen</button>
+      <button class="tab" data-tab="movimientos">Movimientos</button>
+      <button class="tab" data-tab="config">Ajustes</button>
+    </nav>
+  </div>
+
+  <!-- ====================== MODAL AGREGAR/EDITAR ====================== -->
+  <div id="modal" class="modal oculto">
+    <form id="form-mov" class="modal-card">
+      <div class="modal-head">
+        <strong id="modal-titulo">Nuevo movimiento</strong>
+        <button type="button" class="btn-icono" id="modal-cerrar" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="seg" role="tablist">
+        <label class="seg-op"><input type="radio" name="tipo" value="egreso" checked><span>Egreso</span></label>
+        <label class="seg-op"><input type="radio" name="tipo" value="ingreso"><span>Ingreso</span></label>
+      </div>
+
+      <div class="campo-monto">
+        <select id="m-moneda">
+          <option value="ARS">ARS $</option>
+          <option value="USD">USD US$</option>
+        </select>
+        <input type="number" id="m-monto" placeholder="0,00" step="0.01" min="0.01" required inputmode="decimal" />
+      </div>
+
+      <label>Descripción
+        <input type="text" id="m-desc" required maxlength="140" placeholder="Ej: Pago hosting mensual" />
+      </label>
+
+      <div class="filtros-fila">
+        <label>Fecha
+          <input type="date" id="m-fecha" required />
+        </label>
+        <label>Categoría
+          <select id="m-categoria"></select>
+        </label>
+      </div>
+
+      <label>Proyecto (opcional)
+        <select id="m-proyecto"><option value="">—</option></select>
+      </label>
+
+      <!-- COMPROBANTES: desactivado por ahora. Para reactivar en el futuro:
+           1) crear el bucket privado "comprobantes" en Supabase → Storage
+           2) quitar la clase "oculto" del <label> de abajo -->
+      <label class="oculto">Comprobante / factura (opcional)
+        <input type="file" id="m-archivo" accept="image/*,application/pdf" />
+      </label>
+      <div id="m-archivo-actual" class="tenue oculto"></div>
+
+      <p id="mov-error" class="error oculto"></p>
+
+      <div class="modal-acciones">
+        <button type="button" id="btn-borrar" class="btn btn-peligro oculto">Borrar</button>
+        <button type="submit" id="btn-guardar" class="btn btn-primario">Guardar</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="toast" class="toast oculto"></div>
+
+  <script type="module" src="js/intro.js"></script>
+  <script type="module" src="js/space.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Archivos de sistema
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+.DS_Store
+
+# Dependencias / builds (por si en el futuro agregamos)
+node_modules/
+dist/
+
+# Notas locales
+*.local
+.vscode/
